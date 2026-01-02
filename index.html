@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrivateVault | Secure Family Space</title>
+    <title>PrivateVault</title>
     <style>
         :root { --primary: #1a202c; --accent: #3182ce; --bg: #f7fafc; --admin: #805ad5; --danger: #e53e3e; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--primary); }
@@ -14,8 +14,9 @@
         button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; }
         button.secondary { background: #e2e8f0; color: #1a202c; }
         .admin-area { border: 2px solid var(--admin); padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #faf5ff; }
-        .note-card { background: #edf2f7; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid var(--accent); }
+        .note-card { background: #edf2f7; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid var(--accent); position: relative; }
         .secret-box { background: #fff5f5; padding: 15px; border: 1px dashed var(--danger); border-radius: 8px; margin: 15px 0; }
+        code { background: #eee; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -23,144 +24,128 @@
 <div class="container">
     <h1>PrivateVault</h1>
 
-    <div id="login-sec" class="section active">
-        <h2>Account Login</h2>
+    <div id="login-sec" class="section">
+        <h2>Login</h2>
         <input type="text" id="login-user" placeholder="Username">
         <input type="password" id="login-pass" placeholder="Password">
-        <button onclick="handleLogin()">Login to Vault</button>
-        <button class="secondary" onclick="showSection('reg-sec')">Register New Account</button>
+        <button onclick="handleLogin()">Login</button>
+        <button class="secondary" onclick="showSection('reg-sec')">Register</button>
     </div>
 
     <div id="reg-sec" class="section">
-        <h2>Create Family Profile</h2>
-        <input type="text" id="reg-user" placeholder="Choose Username">
-        <input type="password" id="reg-pass" placeholder="Choose Password">
-        <hr>
-        <p><small>The following "Secret" is readable by you and the Admin:</small></p>
+        <h2>Register</h2>
+        <input type="text" id="reg-user" placeholder="Username">
+        <input type="password" id="reg-pass" placeholder="Password">
         <input type="text" id="reg-secret" placeholder="Your Personal Secret (Readable)">
-        <input type="text" id="reg-note" placeholder="Optional Note or Website">
         <button onclick="handleRegister()">Create Account</button>
-        <button class="secondary" onclick="showSection('login-sec')">Back to Login</button>
+        <button class="secondary" onclick="showSection('login-sec')">Back</button>
     </div>
 
     <div id="verify-sec" class="section">
-        <h2>Secondary Verification</h2>
-        <p>Enter the 20-minute Family Access Code:</p>
-        <input type="text" id="verify-code-input" placeholder="Paste code here...">
-        <button onclick="confirmFamilyCode()">Confirm & Enter</button>
+        <h2>Family Access Code</h2>
+        <p>Enter the 20-minute code from Admin:</p>
+        <input type="text" id="verify-code-input" placeholder="e.g. y52S30%2D1)r">
+        <button onclick="confirmFamilyCode()">Enter Vault</button>
     </div>
 
     <div id="vault-sec" class="section">
         <div style="display:flex; justify-content: space-between; align-items: center;">
-            <h2 id="welcome-msg">Member Vault</h2>
-            <button onclick="location.reload()" style="width:auto;">Logout</button>
+            <h2 id="welcome-msg">Vault</h2>
+            <button onclick="logout()" style="width:auto; background:var(--danger)">Logout</button>
         </div>
 
         <div id="admin-panel" style="display:none" class="admin-area">
-            <h3 style="color:var(--admin); margin-top:0">Admin Control Panel</h3>
-            <p>Current Code: <code id="current-code-text" style="background:#ddd; padding:4px; font-weight:bold;"></code></p>
+            <h3 style="color:var(--admin); margin-top:0">Admin Dashboard</h3>
+            <p>Rotating Code: <code id="current-code-text"></code></p>
             <p><small>Expires in: <span id="timer"></span></small></p>
-            <button onclick="generateComplexCode()" style="background:var(--admin)">Generate New `y52S30%2D1)r` Code</button>
+            <button onclick="generateComplexCode()" style="background:var(--admin)">Generate New Complex Code</button>
             <hr>
-            <h4>Family Directory (Admin View)</h4>
-            <div id="admin-user-list" style="font-size: 0.85em;"></div>
+            <h4>All Member Secrets:</h4>
+            <div id="admin-user-list"></div>
         </div>
 
         <div class="secret-box">
-            <h3 style="margin-top:0; color:var(--danger)">My Personal Secret</h3>
-            <p id="my-stored-secret" style="font-size: 1.2em; font-weight: bold;"></p>
-            <button onclick="editSecret()" class="secondary" style="width:auto; padding:5px 10px;">Edit Secret</button>
+            <h3 style="margin-top:0">My Personal Secret</h3>
+            <p id="my-stored-secret"></p>
         </div>
 
         <div id="notes-area">
-            <h3>My Private Notes & Websites</h3>
-            <div style="background:#f1f5f9; padding: 15px; border-radius: 8px;">
-                <input type="text" id="note-title" placeholder="Site Name or Title">
-                <textarea id="note-content" placeholder="Details, Passwords, or Links..."></textarea>
-                <button onclick="addNote()">Save to Vault</button>
-            </div>
+            <h3>My Notes & Sites</h3>
+            <input type="text" id="note-title" placeholder="Title">
+            <textarea id="note-content" placeholder="Content..."></textarea>
+            <button onclick="addNote()">Add Note</button>
             <div id="my-notes-list"></div>
         </div>
     </div>
 </div>
 
 <script>
+    // --- DATA HANDLING ---
     let users = JSON.parse(localStorage.getItem('pv_users')) || {};
     let sys = JSON.parse(localStorage.getItem('pv_sys')) || { code: "", expiry: 0 };
-    let currentUser = null;
+    let currentUser = localStorage.getItem('pv_session_user'); // PERSISTENCE FIX
+    let hasVerifiedCode = sessionStorage.getItem('pv_verified') === 'true';
 
+    function saveUsers() { localStorage.setItem('pv_users', JSON.stringify(users)); }
+    function saveSys() { localStorage.setItem('pv_sys', JSON.stringify(sys)); }
+
+    // --- NAVIGATION ---
     function showSection(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
 
-    // --- SECURITY: COMPLEX CODE GENERATOR ---
-    function generateComplexCode() {
-        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}";
-        let code = "";
-        for (let i = 0; i < 15; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-        sys.code = code;
-        sys.expiry = Date.now() + (20 * 60 * 1000);
-        localStorage.setItem('pv_sys', JSON.stringify(sys));
-        renderAdmin();
-    }
-
-    // --- AUTHENTICATION ---
+    // --- AUTH ---
     function handleRegister() {
         const u = document.getElementById('reg-user').value;
         const p = document.getElementById('reg-pass').value;
         const s = document.getElementById('reg-secret').value;
-        const n = document.getElementById('reg-note').value;
-        
-        if(!u || !p || !s) return alert("Username, Password, and Secret are required!");
-        if(users[u]) return alert("Username already taken.");
+        if(!u || !p || !s) return alert("All fields required");
+        if(users[u]) return alert("User exists");
 
         const isAdmin = Object.keys(users).length === 0;
-        users[u] = { 
-            password: p, 
-            personalSecret: s, 
-            optionalNote: n, 
-            isAdmin: isAdmin, 
-            notes: [] 
-        };
+        users[u] = { password: p, personalSecret: s, isAdmin, notes: [] };
         saveUsers();
-        alert("Account Created! Login now.");
+        alert("Registered! Now Login.");
         showSection('login-sec');
     }
 
     function handleLogin() {
         const u = document.getElementById('login-user').value;
         const p = document.getElementById('login-pass').value;
-
         if(users[u] && users[u].password === p) {
             currentUser = u;
-            // Admin bypasses the family code
-            if(users[u].isAdmin) {
-                if(!sys.code) generateComplexCode();
-                openVault();
-            } else {
-                showSection('verify-sec');
-            }
+            localStorage.setItem('pv_session_user', u); // Save session
+            checkAccessPath();
+        } else { alert("Wrong credentials"); }
+    }
+
+    function checkAccessPath() {
+        if(!currentUser) return showSection('login-sec');
+        
+        if(users[currentUser].isAdmin) {
+            if(!sys.code) generateComplexCode();
+            openVault();
+        } else if (hasVerifiedCode) {
+            openVault();
         } else {
-            alert("Invalid Username or Password.");
+            showSection('verify-sec');
         }
     }
 
     function confirmFamilyCode() {
         const input = document.getElementById('verify-code-input').value;
         if(input === sys.code && Date.now() < sys.expiry) {
+            hasVerifiedCode = true;
+            sessionStorage.setItem('pv_verified', 'true');
             openVault();
-        } else {
-            alert("Incorrect or Expired Family Code. Ask the Admin.");
-        }
+        } else { alert("Code invalid or expired."); }
     }
 
-    // --- VAULT FUNCTIONS ---
     function openVault() {
         showSection('vault-sec');
         document.getElementById('welcome-msg').innerText = "Hello, " + currentUser;
         document.getElementById('my-stored-secret').innerText = users[currentUser].personalSecret;
-        
         if(users[currentUser].isAdmin) {
             document.getElementById('admin-panel').style.display = 'block';
             renderAdmin();
@@ -168,34 +153,37 @@
         renderNotes();
     }
 
+    // --- VAULT LOGIC ---
+    function generateComplexCode() {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+";
+        let code = "";
+        for (let i = 0; i < 15; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+        sys.code = code;
+        sys.expiry = Date.now() + (20 * 60 * 1000);
+        saveSys();
+        renderAdmin();
+    }
+
     function renderAdmin() {
         document.getElementById('current-code-text').innerText = sys.code;
         const list = document.getElementById('admin-user-list');
-        list.innerHTML = "<strong>Users and their Secrets:</strong><br>";
+        list.innerHTML = "";
         Object.keys(users).forEach(u => {
-            list.innerHTML += `<div style="margin:5px 0; border-bottom:1px solid #ddd;">
-                User: <b>${u}</b> | Secret: <span style="color:green">${users[u].personalSecret}</span>
-                <button onclick="deleteUser('${u}')" style="width:auto; padding:2px; background:red; font-size:10px;">Delete User</button>
-            </div>`;
+            list.innerHTML += `<p><b>${u}</b>: ${users[u].personalSecret} <button onclick="deleteUser('${u}')" style="width:auto; padding:2px; font-size:10px;">Del</button></p>`;
         });
     }
 
     function deleteUser(u) {
-        if(u === currentUser) return alert("Cannot delete yourself!");
-        if(confirm("Delete " + u + "?")) {
-            delete users[u];
-            saveUsers();
-            renderAdmin();
-        }
+        if(u === currentUser) return;
+        delete users[u]; saveUsers(); renderAdmin();
     }
 
     function addNote() {
         const t = document.getElementById('note-title').value;
         const c = document.getElementById('note-content').value;
-        if(!t) return alert("Enter a title");
+        if(!t) return;
         users[currentUser].notes.push({t, c, id: Date.now()});
-        saveUsers();
-        renderNotes();
+        saveUsers(); renderNotes();
         document.getElementById('note-title').value = "";
         document.getElementById('note-content').value = "";
     }
@@ -204,43 +192,30 @@
         const div = document.getElementById('my-notes-list');
         div.innerHTML = "";
         users[currentUser].notes.forEach(n => {
-            div.innerHTML += `
-                <div class="note-card">
-                    <button onclick="deleteNote(${n.id})" style="float:right; width:auto; background:red; padding:2px 5px;">X</button>
-                    <strong>${n.t}</strong>
-                    <p style="white-space: pre-wrap;">${n.c}</p>
-                </div>`;
+            div.innerHTML += `<div class="note-card"><strong>${n.t}</strong><p>${n.c}</p></div>`;
         });
     }
 
-    function deleteNote(id) {
-        users[currentUser].notes = users[currentUser].notes.filter(n => n.id !== id);
-        saveUsers();
-        renderNotes();
+    function logout() {
+        localStorage.removeItem('pv_session_user');
+        sessionStorage.removeItem('pv_verified');
+        location.reload();
     }
 
-    function editSecret() {
-        const ns = prompt("Change your personal secret:", users[currentUser].personalSecret);
-        if(ns !== null) {
-            users[currentUser].personalSecret = ns;
-            saveUsers();
-            openVault();
-        }
-    }
-
-    function saveUsers() { localStorage.setItem('pv_users', JSON.stringify(users)); }
-
-    // Timer logic
+    // Timer
     setInterval(() => {
         if(sys.expiry > 0) {
             const rem = Math.max(0, sys.expiry - Date.now());
-            const m = Math.floor(rem/60000); 
-            const s = Math.floor((rem%60000)/1000);
-            document.getElementById('timer').innerText = `${m}m ${s}s`;
-            if(rem === 0) document.getElementById('current-code-text').innerText = "EXPIRED - Generate New";
+            const m = Math.floor(rem/60000); const s = Math.floor((rem%60000)/1000);
+            const timerEl = document.getElementById('timer');
+            if(timerEl) timerEl.innerText = `${m}m ${s}s`;
         }
     }, 1000);
-</script>
 
+    // AUTO-LOAD ON REFRESH
+    if(currentUser) checkAccessPath();
+    else showSection('login-sec');
+
+</script>
 </body>
 </html>
