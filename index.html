@@ -1,213 +1,310 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrivateVault</title>
-    <style>
-        :root { --primary: #1a202c; --accent: #3182ce; --bg: #f7fafc; --admin: #805ad5; --danger: #e53e3e; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--primary); }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .section { display: none; }
-        .active { display: block; }
-        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #cbd5e0; box-sizing: border-box; }
-        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; }
-        button.danger { background: var(--danger); }
-        button.secondary { background: #e2e8f0; color: #1a202c; }
-        .admin-area { border: 2px solid var(--admin); padding: 15px; border-radius: 8px; margin-bottom: 20px; background: #faf5ff; }
-        .note-card { background: #edf2f7; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid var(--accent); }
-        .note-actions { display: flex; gap: 5px; margin-top: 10px; }
-        .note-actions button { width: auto; padding: 5px 10px; font-size: 0.8em; }
-        .secret-box { background: #fff5f5; padding: 15px; border: 1px dashed var(--danger); border-radius: 8px; margin: 15px 0; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrivateVault</title>
+
+<style>
+:root {
+    --primary:#1a202c;
+    --accent:#3182ce;
+    --bg:#f7fafc;
+    --admin:#805ad5;
+    --danger:#e53e3e;
+}
+body {
+    font-family:Segoe UI,sans-serif;
+    background:var(--bg);
+    padding:20px;
+}
+.container {
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    box-shadow:0 4px 6px rgba(0,0,0,.1);
+}
+.section { display:none; }
+.active { display:block; }
+input, textarea, button {
+    width:100%;
+    padding:12px;
+    margin:8px 0;
+    border-radius:6px;
+    border:1px solid #cbd5e0;
+}
+button {
+    background:var(--accent);
+    color:white;
+    font-weight:bold;
+    border:none;
+}
+button.secondary {
+    background:#e2e8f0;
+    color:#1a202c;
+}
+button.danger {
+    background:var(--danger);
+}
+.admin-area {
+    border:2px solid var(--admin);
+    padding:15px;
+    background:#faf5ff;
+    border-radius:8px;
+}
+.note-card {
+    background:#edf2f7;
+    padding:12px;
+    border-radius:8px;
+    margin:10px 0;
+}
+.note-actions {
+    display:flex;
+    gap:5px;
+}
+.note-actions button {
+    width:auto;
+    font-size:12px;
+    padding:5px 8px;
+}
+.captcha-box {
+    background:#f1f5f9;
+    padding:10px;
+    border-radius:6px;
+    font-weight:bold;
+}
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <h1>PrivateVault</h1>
+<h1>PrivateVault</h1>
 
-    <div id="login-sec" class="section active">
-        <h2>Login</h2>
-        <input type="text" id="login-user" placeholder="Username">
-        <div style="position:relative">
-            <input type="password" id="login-pass" placeholder="Password">
-            <small style="cursor:pointer; color:blue" onclick="togglePass('login-pass')">Show/Hide Password</small>
-        </div>
-        <button onclick="handleLogin()">Login</button>
-        <button class="secondary" onclick="showSection('reg-sec')">Register</button>
-    </div>
+<!-- LOGIN -->
+<div id="login-sec" class="section active">
+<h2>Login</h2>
+<input id="login-user" placeholder="Username">
+<input id="login-pass" type="password" placeholder="Password">
+<div class="captcha-box" id="login-captcha-text"></div>
+<input id="login-captcha" placeholder="Captcha answer">
+<button onclick="handleLogin()">Login</button>
+<button class="secondary" onclick="showSection('reg-sec')">Register</button>
+</div>
 
-    <div id="reg-sec" class="section">
-        <h2>Register</h2>
-        <input type="text" id="reg-user" placeholder="Username">
-        <input type="password" id="reg-pass" placeholder="Password">
-        <input type="text" id="reg-secret" placeholder="Personal Secret">
-        <button onclick="handleRegister()">Create Account</button>
-        <button class="secondary" onclick="showSection('login-sec')">Back</button>
-    </div>
+<!-- REGISTER -->
+<div id="reg-sec" class="section">
+<h2>Register</h2>
+<input id="reg-user" placeholder="Username">
+<input id="reg-pass" type="password" placeholder="Password">
+<input id="reg-secret" placeholder="Personal Secret">
+<div class="captcha-box" id="reg-captcha-text"></div>
+<input id="reg-captcha" placeholder="Captcha answer">
+<button onclick="handleRegister()">Create Account</button>
+<button class="secondary" onclick="showSection('login-sec')">Back</button>
+</div>
 
-    <div id="verify-sec" class="section">
-        <h2>Family Access Code</h2>
-        <input type="text" id="verify-code-input" placeholder="Enter the complex code">
-        <button onclick="confirmFamilyCode()">Verify</button>
-    </div>
+<!-- VERIFY -->
+<div id="verify-sec" class="section">
+<h2>Family Code</h2>
+<input id="verify-code-input" placeholder="Enter code">
+<button onclick="confirmFamilyCode()">Verify</button>
+</div>
 
-    <div id="vault-sec" class="section">
-        <div style="display:flex; justify-content: space-between; align-items: center;">
-            <h2 id="welcome-msg">Vault</h2>
-            <button onclick="logout()" style="width:auto;" class="danger">Logout</button>
-        </div>
+<!-- VAULT -->
+<div id="vault-sec" class="section">
+<div style="display:flex;justify-content:space-between">
+<h2 id="welcome-msg"></h2>
+<button class="danger" style="width:auto" onclick="logout()">Logout</button>
+</div>
 
-        <div id="admin-panel" style="display:none" class="admin-area">
-            <h3 style="color:var(--admin); margin:0">Admin Control</h3>
-            <p>Code: <code id="current-code-text"></code></p>
-            <button onclick="generateComplexCode()" style="background:var(--admin)">New Code</button>
-            <hr>
-            <div id="admin-user-list"></div>
-        </div>
+<div id="admin-panel" class="admin-area" style="display:none">
+<h3>Admin Panel</h3>
+<p>Family Code: <code id="current-code-text"></code></p>
+<button onclick="generateComplexCode()" style="background:var(--admin)">New Code</button>
+<hr>
+<div id="admin-user-list"></div>
+</div>
 
-        <div class="secret-box">
-            <h3>My Personal Secret</h3>
-            <p id="my-stored-secret" style="font-weight:bold"></p>
-            <button class="secondary" style="width:auto; padding:5px" onclick="editMySecret()">Edit Secret</button>
-        </div>
+<h3>My Secret</h3>
+<p id="my-stored-secret"></p>
+<button class="secondary" style="width:auto" onclick="editMySecret()">Edit</button>
 
-        <div id="notes-area">
-            <h3>My Notes & Sites</h3>
-            <input type="text" id="note-title" placeholder="Title">
-            <textarea id="note-content" placeholder="Content..."></textarea>
-            <button onclick="addNote()">Save Note</button>
-            <div id="my-notes-list"></div>
-        </div>
-    </div>
+<h3>Notes</h3>
+<input id="note-title" placeholder="Title">
+<textarea id="note-content" placeholder="Content"></textarea>
+<button onclick="addNote()">Save Note</button>
+<div id="my-notes-list"></div>
+</div>
 </div>
 
 <script>
-    let users = JSON.parse(localStorage.getItem('pv_users')) || {};
-    let sys = JSON.parse(localStorage.getItem('pv_sys')) || { code: "", expiry: 0 };
-    let currentUser = localStorage.getItem('pv_session_user');
-    let hasVerifiedCode = sessionStorage.getItem('pv_verified') === 'true';
+/* ===== STORAGE ===== */
+let users = JSON.parse(localStorage.getItem("pv_users")) || {};
+let sys = JSON.parse(localStorage.getItem("pv_sys")) || { code:"" };
+let currentUser = localStorage.getItem("pv_session_user");
 
-    function save() { localStorage.setItem('pv_users', JSON.stringify(users)); }
+/* ===== CAPTCHA ===== */
+let loginCaptcha = {};
+let regCaptcha = {};
 
-    function showSection(id) {
-        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
+function newCaptcha(target, obj) {
+    const a = Math.floor(Math.random()*10)+1;
+    const b = Math.floor(Math.random()*10)+1;
+    obj.answer = a + b;
+    document.getElementById(target).innerText = `What is ${a} + ${b}?`;
+}
 
-    function togglePass(id) {
-        const x = document.getElementById(id);
-        x.type = x.type === "password" ? "text" : "password";
-    }
+newCaptcha("login-captcha-text", loginCaptcha);
+newCaptcha("reg-captcha-text", regCaptcha);
 
-    function handleRegister() {
-        const u = document.getElementById('reg-user').value.trim();
-        const p = document.getElementById('reg-pass').value;
-        const s = document.getElementById('reg-secret').value;
-        if(!u || !p || !s) return alert("Fill all fields");
-        const isAdmin = Object.keys(users).length === 0;
-        users[u] = { password: p, personalSecret: s, isAdmin, notes: [] };
-        save();
-        showSection('login-sec');
-    }
+/* ===== HELPERS ===== */
+function save() {
+    localStorage.setItem("pv_users", JSON.stringify(users));
+    localStorage.setItem("pv_sys", JSON.stringify(sys));
+}
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
 
-    function handleLogin() {
-        const u = document.getElementById('login-user').value.trim();
-        const p = document.getElementById('login-pass').value;
-        if(users[u] && users[u].password === p) {
-            currentUser = u;
-            localStorage.setItem('pv_session_user', u);
-            if(users[u].isAdmin) { if(!sys.code) generateComplexCode(); openVault(); }
-            else { showSection('verify-sec'); }
-        } else { alert("Wrong password or user not found."); }
-    }
+/* ===== AUTH ===== */
+function handleRegister() {
+    if (+document.getElementById("reg-captcha").value !== regCaptcha.answer)
+        return alert("Captcha incorrect");
 
-    function confirmFamilyCode() {
-        if(document.getElementById('verify-code-input').value === sys.code) {
-            hasVerifiedCode = true;
-            sessionStorage.setItem('pv_verified', 'true');
-            openVault();
-        } else { alert("Invalid Code"); }
-    }
+    const u = reg-user.value.trim();
+    const p = reg-pass.value;
+    const s = reg-secret.value;
+    if(!u||!p||!s) return alert("Fill all fields");
+    if(users[u]) return alert("User exists");
 
-    function openVault() {
-        showSection('vault-sec');
-        document.getElementById('welcome-msg').innerText = "Hello, " + currentUser;
-        document.getElementById('my-stored-secret').innerText = users[currentUser].personalSecret;
-        if(users[currentUser].isAdmin) {
-            document.getElementById('admin-panel').style.display = 'block';
-            renderAdmin();
-        }
-        renderNotes();
-    }
+    const isAdmin = !Object.values(users).some(x=>x.isAdmin);
+    users[u] = { password:p, personalSecret:s, isAdmin, notes:[] };
+    save();
+    newCaptcha("reg-captcha-text", regCaptcha);
+    showSection("login-sec");
+}
 
-    function generateComplexCode() {
-        const c = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
-        let code = "";
-        for (let i = 0; i < 12; i++) code += c.charAt(Math.floor(Math.random() * c.length));
-        sys.code = code;
-        localStorage.setItem('pv_sys', JSON.stringify(sys));
+function handleLogin() {
+    if (+login-captcha.value !== loginCaptcha.answer)
+        return alert("Captcha incorrect");
+
+    const u = login-user.value.trim();
+    const p = login-pass.value;
+    if(!users[u] || users[u].password !== p)
+        return alert("Invalid login");
+
+    currentUser = u;
+    localStorage.setItem("pv_session_user", u);
+    if(users[u].isAdmin) {
+        if(!sys.code) generateComplexCode();
+        openVault();
+    } else showSection("verify-sec");
+}
+
+/* ===== FAMILY CODE ===== */
+function generateComplexCode() {
+    const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#";
+    sys.code="";
+    for(let i=0;i<12;i++) sys.code+=chars[Math.floor(Math.random()*chars.length)];
+    save();
+    renderAdmin();
+}
+
+function confirmFamilyCode() {
+    if(verify-code-input.value===sys.code) openVault();
+    else alert("Wrong code");
+}
+
+/* ===== VAULT ===== */
+function openVault() {
+    showSection("vault-sec");
+    welcome-msg.innerText="Hello, "+currentUser;
+    my-stored-secret.innerText=users[currentUser].personalSecret;
+    if(users[currentUser].isAdmin) {
+        admin-panel.style.display="block";
         renderAdmin();
     }
+    renderNotes();
+}
 
-    function renderAdmin() {
-        document.getElementById('current-code-text').innerText = sys.code;
-        const list = document.getElementById('admin-user-list');
-        list.innerHTML = "<h4>Users:</h4>";
-        Object.keys(users).forEach(u => {
-            list.innerHTML += `<p>${u} (${users[u].personalSecret}) <button onclick="deleteUser('${u}')" style="width:auto; padding:2px; background:red; font-size:10px;">Delete</button></p>`;
-        });
+function renderAdmin() {
+    current-code-text.innerText=sys.code;
+    admin-user-list.innerHTML="<b>Users:</b>";
+    Object.keys(users).forEach(u=>{
+        admin-user-list.innerHTML+=`
+        <p>${u}
+        <button onclick="deleteUser('${u}')" class="danger" style="width:auto">Delete</button></p>`;
+    });
+}
+
+function deleteUser(u) {
+    if(confirm("Delete "+u+"?")) {
+        delete users[u];
+        save();
+        renderAdmin();
     }
+}
 
-    function deleteUser(u) { if(confirm("Delete " + u + "?")) { delete users[u]; save(); renderAdmin(); } }
+/* ===== NOTES ===== */
+function addNote() {
+    if(!note-title.value) return;
+    users[currentUser].notes.push({
+        t:note-title.value,
+        c:note-content.value,
+        id:Date.now()
+    });
+    save();
+    renderNotes();
+    note-title.value="";
+    note-content.value="";
+}
 
-    function editMySecret() {
-        const n = prompt("New secret:", users[currentUser].personalSecret);
-        if(n) { users[currentUser].personalSecret = n; save(); openVault(); }
+function renderNotes() {
+    my-notes-list.innerHTML="";
+    users[currentUser].notes.forEach(n=>{
+        my-notes-list.innerHTML+=`
+        <div class="note-card">
+        <b>${n.t}</b><p>${n.c}</p>
+        <div class="note-actions">
+        <button onclick="editNote(${n.id})" class="secondary">Edit</button>
+        <button onclick="deleteNote(${n.id})" class="danger">Delete</button>
+        </div></div>`;
+    });
+}
+
+function deleteNote(id) {
+    users[currentUser].notes =
+        users[currentUser].notes.filter(n=>n.id!==id);
+    save(); renderNotes();
+}
+
+function editNote(id) {
+    const n = users[currentUser].notes.find(x=>x.id===id);
+    const t = prompt("Title", n.t);
+    const c = prompt("Content", n.c);
+    if(t!==null) n.t=t;
+    if(c!==null) n.c=c;
+    save(); renderNotes();
+}
+
+/* ===== OTHER ===== */
+function editMySecret() {
+    const s = prompt("New secret", users[currentUser].personalSecret);
+    if(s) {
+        users[currentUser].personalSecret=s;
+        save();
+        my-stored-secret.innerText=s;
     }
+}
+function logout() {
+    localStorage.removeItem("pv_session_user");
+    location.reload();
+}
 
-    function addNote() {
-        const t = document.getElementById('note-title').value;
-        const c = document.getElementById('note-content').value;
-        if(!t) return;
-        users[currentUser].notes.push({t, c, id: Date.now()});
-        save(); renderNotes();
-        document.getElementById('note-title').value = ""; document.getElementById('note-content').value = "";
-    }
-
-    function renderNotes() {
-        const div = document.getElementById('my-notes-list');
-        div.innerHTML = "";
-        users[currentUser].notes.forEach(n => {
-            div.innerHTML += `
-                <div class="note-card">
-                    <strong>${n.t}</strong>
-                    <p>${n.c}</p>
-                    <div class="note-actions">
-                        <button class="secondary" onclick="editNote(${n.id})">Edit</button>
-                        <button class="danger" onclick="deleteNote(${n.id})">Delete</button>
-                    </div>
-                </div>`;
-        });
-    }
-
-    function deleteNote(id) {
-        users[currentUser].notes = users[currentUser].notes.filter(n => n.id !== id);
-        save(); renderNotes();
-    }
-
-    function editNote(id) {
-        const note = users[currentUser].notes.find(n => n.id === id);
-        const nt = prompt("Edit Title:", note.t);
-        const nc = prompt("Edit Content:", note.c);
-        if(nt !== null) note.t = nt;
-        if(nc !== null) note.c = nc;
-        save(); renderNotes();
-    }
-
-    function logout() { localStorage.removeItem('pv_session_user'); sessionStorage.removeItem('pv_verified'); location.reload(); }
-
-    if(currentUser) openVault();
+if(currentUser) openVault();
 </script>
 </body>
 </html>
