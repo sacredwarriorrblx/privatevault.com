@@ -2,79 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrivateVault</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-:root {
-    --primary:#1a202c;
-    --accent:#3182ce;
-    --bg:#f7fafc;
-    --admin:#805ad5;
-    --danger:#e53e3e;
-}
-body {
-    font-family:Segoe UI,sans-serif;
-    background:var(--bg);
-    padding:20px;
-}
-.container {
-    max-width:800px;
-    margin:auto;
-    background:white;
-    padding:30px;
-    border-radius:12px;
-    box-shadow:0 4px 6px rgba(0,0,0,.1);
-}
-.section { display:none; }
-.active { display:block; }
-input, textarea, button {
-    width:100%;
-    padding:12px;
-    margin:8px 0;
-    border-radius:6px;
-    border:1px solid #cbd5e0;
-}
-button {
-    background:var(--accent);
-    color:white;
-    font-weight:bold;
-    border:none;
-}
-button.secondary {
-    background:#e2e8f0;
-    color:#1a202c;
-}
-button.danger {
-    background:var(--danger);
-}
-.admin-area {
-    border:2px solid var(--admin);
-    padding:15px;
-    background:#faf5ff;
-    border-radius:8px;
-}
-.note-card {
-    background:#edf2f7;
-    padding:12px;
-    border-radius:8px;
-    margin:10px 0;
-}
-.note-actions {
-    display:flex;
-    gap:5px;
-}
-.note-actions button {
-    width:auto;
-    font-size:12px;
-    padding:5px 8px;
-}
-.captcha-box {
-    background:#f1f5f9;
-    padding:10px;
-    border-radius:6px;
-    font-weight:bold;
-}
+body{font-family:Segoe UI,sans-serif;background:#f7fafc;padding:20px}
+.container{max-width:800px;margin:auto;background:#fff;padding:30px;border-radius:12px}
+.section{display:none}
+.active{display:block}
+input,textarea,button{width:100%;padding:10px;margin:6px 0}
+button{background:#3182ce;color:#fff;border:none;font-weight:bold}
+.secondary{background:#e2e8f0;color:#000}
+.danger{background:#e53e3e}
+.admin-area{border:2px solid #805ad5;padding:10px;margin:10px 0}
+.note-card{background:#edf2f7;padding:10px;margin:8px 0}
+.captcha-box{background:#e2e8f0;padding:8px;font-weight:bold}
 </style>
 </head>
 
@@ -82,225 +24,165 @@ button.danger {
 <div class="container">
 <h1>PrivateVault</h1>
 
-<!-- LOGIN -->
 <div id="login-sec" class="section active">
 <h2>Login</h2>
-<input id="login-user" placeholder="Username">
-<input id="login-pass" type="password" placeholder="Password">
-<div class="captcha-box" id="login-captcha-text"></div>
-<input id="login-captcha" placeholder="Captcha answer">
+<input id="loginUser" placeholder="Username">
+<input id="loginPass" type="password" placeholder="Password">
+<div class="captcha-box" id="loginCaptchaText"></div>
+<input id="loginCaptcha" placeholder="Captcha answer">
 <button onclick="handleLogin()">Login</button>
 <button class="secondary" onclick="showSection('reg-sec')">Register</button>
 </div>
 
-<!-- REGISTER -->
 <div id="reg-sec" class="section">
 <h2>Register</h2>
-<input id="reg-user" placeholder="Username">
-<input id="reg-pass" type="password" placeholder="Password">
-<input id="reg-secret" placeholder="Personal Secret">
-<div class="captcha-box" id="reg-captcha-text"></div>
-<input id="reg-captcha" placeholder="Captcha answer">
-<button onclick="handleRegister()">Create Account</button>
+<input id="regUser" placeholder="Username">
+<input id="regPass" type="password" placeholder="Password">
+<input id="regSecret" placeholder="Personal Secret">
+<div class="captcha-box" id="regCaptchaText"></div>
+<input id="regCaptcha" placeholder="Captcha answer">
+<button onclick="handleRegister()">Create</button>
 <button class="secondary" onclick="showSection('login-sec')">Back</button>
 </div>
 
-<!-- VERIFY -->
 <div id="verify-sec" class="section">
 <h2>Family Code</h2>
-<input id="verify-code-input" placeholder="Enter code">
+<input id="verifyCode">
 <button onclick="confirmFamilyCode()">Verify</button>
 </div>
 
-<!-- VAULT -->
 <div id="vault-sec" class="section">
-<div style="display:flex;justify-content:space-between">
-<h2 id="welcome-msg"></h2>
-<button class="danger" style="width:auto" onclick="logout()">Logout</button>
+<h2 id="welcome"></h2>
+<button class="danger" onclick="logout()">Logout</button>
+
+<div id="adminPanel" class="admin-area" style="display:none">
+<p>Code: <code id="familyCode"></code></p>
+<button onclick="generateCode()">New Code</button>
+<div id="userList"></div>
 </div>
 
-<div id="admin-panel" class="admin-area" style="display:none">
-<h3>Admin Panel</h3>
-<p>Family Code: <code id="current-code-text"></code></p>
-<button onclick="generateComplexCode()" style="background:var(--admin)">New Code</button>
-<hr>
-<div id="admin-user-list"></div>
-</div>
+<p><b>My Secret:</b> <span id="mySecret"></span></p>
 
-<h3>My Secret</h3>
-<p id="my-stored-secret"></p>
-<button class="secondary" style="width:auto" onclick="editMySecret()">Edit</button>
-
-<h3>Notes</h3>
-<input id="note-title" placeholder="Title">
-<textarea id="note-content" placeholder="Content"></textarea>
-<button onclick="addNote()">Save Note</button>
-<div id="my-notes-list"></div>
+<input id="noteTitle" placeholder="Note title">
+<textarea id="noteContent" placeholder="Note"></textarea>
+<button onclick="addNote()">Add</button>
+<div id="notes"></div>
 </div>
 </div>
 
 <script>
-/* ===== STORAGE ===== */
 let users = JSON.parse(localStorage.getItem("pv_users")) || {};
-let sys = JSON.parse(localStorage.getItem("pv_sys")) || { code:"" };
-let currentUser = localStorage.getItem("pv_session_user");
+let sys = JSON.parse(localStorage.getItem("pv_sys")) || {code:""};
+let currentUser = localStorage.getItem("pv_user");
 
-/* ===== CAPTCHA ===== */
-let loginCaptcha = {};
-let regCaptcha = {};
+/* CAPTCHA */
+let loginCap={}, regCap={};
+function newCaptcha(el,obj){
+    let a=Math.floor(Math.random()*10)+1;
+    let b=Math.floor(Math.random()*10)+1;
+    obj.ans=a+b;
+    document.getElementById(el).innerText=`What is ${a}+${b}?`;
+}
+newCaptcha("loginCaptchaText",loginCap);
+newCaptcha("regCaptchaText",regCap);
 
-function newCaptcha(target, obj) {
-    const a = Math.floor(Math.random()*10)+1;
-    const b = Math.floor(Math.random()*10)+1;
-    obj.answer = a + b;
-    document.getElementById(target).innerText = `What is ${a} + ${b}?`;
+function save(){
+    localStorage.setItem("pv_users",JSON.stringify(users));
+    localStorage.setItem("pv_sys",JSON.stringify(sys));
 }
 
-newCaptcha("login-captcha-text", loginCaptcha);
-newCaptcha("reg-captcha-text", regCaptcha);
-
-/* ===== HELPERS ===== */
-function save() {
-    localStorage.setItem("pv_users", JSON.stringify(users));
-    localStorage.setItem("pv_sys", JSON.stringify(sys));
-}
-function showSection(id) {
+function showSection(id){
     document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
 }
 
-/* ===== AUTH ===== */
-function handleRegister() {
-    if (+document.getElementById("reg-captcha").value !== regCaptcha.answer)
-        return alert("Captcha incorrect");
+function handleRegister(){
+    if(+document.getElementById("regCaptcha").value!==regCap.ans)
+        return alert("Captcha wrong");
 
-    const u = reg-user.value.trim();
-    const p = reg-pass.value;
-    const s = reg-secret.value;
+    let u=regUser.value.trim();
+    let p=regPass.value;
+    let s=regSecret.value;
     if(!u||!p||!s) return alert("Fill all fields");
     if(users[u]) return alert("User exists");
 
-    const isAdmin = !Object.values(users).some(x=>x.isAdmin);
-    users[u] = { password:p, personalSecret:s, isAdmin, notes:[] };
+    let isAdmin=!Object.values(users).some(x=>x.isAdmin);
+    users[u]={password:p,personalSecret:s,isAdmin,notes:[]};
     save();
-    newCaptcha("reg-captcha-text", regCaptcha);
+    newCaptcha("regCaptchaText",regCap);
     showSection("login-sec");
 }
 
-function handleLogin() {
-    if (+login-captcha.value !== loginCaptcha.answer)
-        return alert("Captcha incorrect");
+function handleLogin(){
+    if(+document.getElementById("loginCaptcha").value!==loginCap.ans)
+        return alert("Captcha wrong");
 
-    const u = login-user.value.trim();
-    const p = login-pass.value;
-    if(!users[u] || users[u].password !== p)
-        return alert("Invalid login");
+    let u=loginUser.value.trim();
+    let p=loginPass.value;
+    if(!users[u]||users[u].password!==p) return alert("Invalid login");
 
-    currentUser = u;
-    localStorage.setItem("pv_session_user", u);
-    if(users[u].isAdmin) {
-        if(!sys.code) generateComplexCode();
+    currentUser=u;
+    localStorage.setItem("pv_user",u);
+    if(users[u].isAdmin){
+        if(!sys.code) generateCode();
         openVault();
     } else showSection("verify-sec");
 }
 
-/* ===== FAMILY CODE ===== */
-function generateComplexCode() {
-    const chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#";
+function generateCode(){
+    const chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     sys.code="";
-    for(let i=0;i<12;i++) sys.code+=chars[Math.floor(Math.random()*chars.length)];
-    save();
-    renderAdmin();
+    for(let i=0;i<10;i++) sys.code+=chars[Math.floor(Math.random()*chars.length)];
+    save(); renderAdmin();
 }
 
-function confirmFamilyCode() {
-    if(verify-code-input.value===sys.code) openVault();
+function confirmFamilyCode(){
+    if(verifyCode.value===sys.code) openVault();
     else alert("Wrong code");
 }
 
-/* ===== VAULT ===== */
-function openVault() {
+function openVault(){
     showSection("vault-sec");
-    welcome-msg.innerText="Hello, "+currentUser;
-    my-stored-secret.innerText=users[currentUser].personalSecret;
-    if(users[currentUser].isAdmin) {
-        admin-panel.style.display="block";
+    welcome.innerText="Hello "+currentUser;
+    mySecret.innerText=users[currentUser].personalSecret;
+    if(users[currentUser].isAdmin){
+        adminPanel.style.display="block";
         renderAdmin();
     }
     renderNotes();
 }
 
-function renderAdmin() {
-    current-code-text.innerText=sys.code;
-    admin-user-list.innerHTML="<b>Users:</b>";
+function renderAdmin(){
+    familyCode.innerText=sys.code;
+    userList.innerHTML="";
     Object.keys(users).forEach(u=>{
-        admin-user-list.innerHTML+=`
-        <p>${u}
-        <button onclick="deleteUser('${u}')" class="danger" style="width:auto">Delete</button></p>`;
+        userList.innerHTML+=`${u}
+        <button onclick="deleteUser('${u}')">Delete</button><br>`;
     });
 }
 
-function deleteUser(u) {
-    if(confirm("Delete "+u+"?")) {
-        delete users[u];
-        save();
-        renderAdmin();
+function deleteUser(u){
+    if(confirm("Delete "+u+"?")){
+        delete users[u]; save(); renderAdmin();
     }
 }
 
-/* ===== NOTES ===== */
-function addNote() {
-    if(!note-title.value) return;
-    users[currentUser].notes.push({
-        t:note-title.value,
-        c:note-content.value,
-        id:Date.now()
-    });
-    save();
-    renderNotes();
-    note-title.value="";
-    note-content.value="";
+function addNote(){
+    if(!noteTitle.value) return;
+    users[currentUser].notes.push({t:noteTitle.value,c:noteContent.value,id:Date.now()});
+    save(); renderNotes();
+    noteTitle.value=""; noteContent.value="";
 }
 
-function renderNotes() {
-    my-notes-list.innerHTML="";
+function renderNotes(){
+    notes.innerHTML="";
     users[currentUser].notes.forEach(n=>{
-        my-notes-list.innerHTML+=`
-        <div class="note-card">
-        <b>${n.t}</b><p>${n.c}</p>
-        <div class="note-actions">
-        <button onclick="editNote(${n.id})" class="secondary">Edit</button>
-        <button onclick="deleteNote(${n.id})" class="danger">Delete</button>
-        </div></div>`;
+        notes.innerHTML+=`<div class="note-card"><b>${n.t}</b><p>${n.c}</p></div>`;
     });
 }
 
-function deleteNote(id) {
-    users[currentUser].notes =
-        users[currentUser].notes.filter(n=>n.id!==id);
-    save(); renderNotes();
-}
-
-function editNote(id) {
-    const n = users[currentUser].notes.find(x=>x.id===id);
-    const t = prompt("Title", n.t);
-    const c = prompt("Content", n.c);
-    if(t!==null) n.t=t;
-    if(c!==null) n.c=c;
-    save(); renderNotes();
-}
-
-/* ===== OTHER ===== */
-function editMySecret() {
-    const s = prompt("New secret", users[currentUser].personalSecret);
-    if(s) {
-        users[currentUser].personalSecret=s;
-        save();
-        my-stored-secret.innerText=s;
-    }
-}
-function logout() {
-    localStorage.removeItem("pv_session_user");
+function logout(){
+    localStorage.removeItem("pv_user");
     location.reload();
 }
 
