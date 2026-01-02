@@ -3,229 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrivateVault | Family Space</title>
+    <title>PrivateVault | Family Heirlooms</title>
     <style>
-        :root {
-            --primary: #4a5568;
-            --accent: #667eea;
-            --bg: #f7fafc;
-            --danger: #e53e3e;
-            --success: #38a169;
-        }
-
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--primary); margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2 { text-align: center; color: var(--accent); }
-        
+        :root { --primary: #2d3748; --accent: #4c51bf; --bg: #f8fafc; --admin: #805ad5; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--primary); }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
         .section { display: none; }
         .active { display: block; }
-
-        input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #cbd5e0; box-sizing: border-box; }
-        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
-        button:hover { opacity: 0.9; }
-        button.secondary { background: #edf2f7; color: var(--primary); }
-        
-        .status-msg { padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 0.9em; text-align: center; }
-        .error { background: #fff5f5; color: var(--danger); border: 1px solid var(--danger); }
-        .admin-panel { border-top: 2px solid #edf2f7; margin-top: 30px; padding-top: 20px; font-size: 0.8em; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #edf2f7; padding: 8px; text-align: left; }
+        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid #cbd5e0; box-sizing: border-box; }
+        button { background: var(--accent); color: white; border: none; font-weight: bold; cursor: pointer; }
+        button.admin-btn { background: var(--admin); }
+        .note-card { background: #f1f5f9; padding: 15px; margin: 10px 0; border-left: 5px solid var(--accent); position: relative; }
+        .error { color: #e53e3e; font-weight: bold; text-align: center; }
+        .hidden-code { background: #2d3748; color: #2d3748; padding: 5px; cursor: pointer; border-radius: 4px; }
+        .hidden-code:hover { color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>PrivateVault</h1>
-    <div id="status" class="status-msg" style="display:none"></div>
+    <h1 id="main-title">PrivateVault</h1>
+    <div id="error-msg" class="error"></div>
 
-    <div id="gatekeeper-sec" class="section active">
-        <h2>Family Access</h2>
-        <p>Please enter the current rotating family code to proceed.</p>
-        <input type="text" id="family-code-input" placeholder="Enter Access Code...">
-        <button onclick="checkAccessCode()">Enter Vault</button>
+    <div id="login-sec" class="section active">
+        <h2>Family Login</h2>
+        <input type="text" id="login-user" placeholder="Username">
+        <input type="text" id="login-secret" placeholder="Your Personal Secret">
+        <button onclick="handleLogin()">Login</button>
+        <hr>
+        <button style="background:#edf2f7; color: #2d3748;" onclick="showSection('reg-sec')">Register New Member</button>
     </div>
 
-    <div id="auth-sec" class="section">
-        <h2>Who are you?</h2>
-        <input type="text" id="user-id" placeholder="Username">
-        <input type="text" id="user-secret" placeholder="Your Personal Secret">
-        <button onclick="login()">Access My Account</button>
-        <button class="secondary" onclick="showSection('signup-sec')">Create New Account</button>
+    <div id="reg-sec" class="section">
+        <h2>Join the Family</h2>
+        <input type="text" id="reg-user" placeholder="Create Username">
+        <input type="text" id="reg-secret" placeholder="Personal Secret (This is your access key)">
+        <button onclick="handleRegister()">Create Account</button>
+        <button style="background:none; color:grey" onclick="showSection('login-sec')">Back to Login</button>
     </div>
 
-    <div id="signup-sec" class="section">
-        <h2>Create Account</h2>
-        <input type="text" id="reg-user" placeholder="Choose Username">
-        <input type="text" id="reg-secret" placeholder="Your Personal Secret (Readable)">
-        <input type="text" id="reg-display" placeholder="Display Name (Optional)">
-        <button onclick="register()">Create & Login</button>
-        <button class="secondary" onclick="showSection('auth-sec')">Back</button>
+    <div id="verify-sec" class="section">
+        <h2>Enter Family Code</h2>
+        <p>A 20-minute security code is required to enter the vault.</p>
+        <input type="text" id="verify-code-input" placeholder="Paste the code from Admin...">
+        <button onclick="confirmFamilyCode()">Verify & Enter</button>
     </div>
 
-    <div id="dash-sec" class="section">
-        <h2>Welcome, <span id="dash-name"></span></h2>
-        <div style="background: #f1f5f9; padding: 15px; border-radius: 8px;">
-            <p><strong>Your Stored Secret:</strong></p>
-            <p id="stored-secret-text" style="font-size: 1.2em; color: var(--accent);"></p>
+    <div id="vault-sec" class="section">
+        <div style="display:flex; justify-content: space-between; align-items: center;">
+            <h2 id="welcome-msg">Your Vault</h2>
+            <button onclick="logout()" style="width:auto; padding: 5px 15px;">Logout</button>
         </div>
-        <button class="secondary" onclick="logout()">Logout</button>
-        <button style="background: var(--danger);" onclick="deleteAccount()">Delete My Account</button>
-    </div>
-
-    <div class="admin-panel">
-        <h3>Admin Oversight (Internal Only)</h3>
-        <p><strong>Current Access Code:</strong> <span id="current-code-display" style="color:red"></span></p>
-        <p>Expires in: <span id="timer"></span></p>
-        <button class="secondary" onclick="generateNewCode()">Force Regenerate Code</button>
         
-        <h4>User Database</h4>
-        <table id="user-table">
-            <thead>
-                <tr><th>User</th><th>Secret</th><th>Status</th><th>Actions</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+        <div id="admin-controls" style="display:none; border: 2px solid var(--admin); padding: 15px; margin-bottom: 20px;">
+            <h3 style="color:var(--admin); margin-top:0;">Admin Security Panel</h3>
+            <p>Current Family Code: <span class="hidden-code" id="admin-code-display" title="Click to reveal">HIDDEN</span></p>
+            <p><small>Code expires in: <span id="timer"></span></small></p>
+            <button class="admin-btn" onclick="generateNewCode()">Generate New Complex Code</button>
+        </div>
+
+        <div id="note-editor" style="background: #edf2f7; padding: 15px; border-radius: 8px;">
+            <h3>Create a Note/Record</h3>
+            <input type="text" id="note-title" placeholder="Title (e.g. My Website)">
+            <textarea id="note-content" placeholder="Content or Secret Details..."></textarea>
+            <button onclick="saveNote()">Add to Vault</button>
+        </div>
+
+        <div id="notes-list"></div>
     </div>
 </div>
 
 <script>
-    // --- SYSTEM STATE ---
-    let state = {
-        accessCode: "",
-        expiry: 0,
-        users: JSON.parse(localStorage.getItem('pv_users')) || {},
-        failedAttempts: {}
-    };
+    let users = JSON.parse(localStorage.getItem('pv_users')) || {};
+    let system = JSON.parse(localStorage.getItem('pv_system')) || { currentCode: "", expiry: 0, usedCodes: [] };
+    let currentUser = null;
 
-    // --- INITIALIZATION ---
-    function init() {
-        generateNewCode();
-        updateAdminTable();
-        setInterval(checkTimer, 1000);
-    }
-
-    // --- ACCESS CODE LOGIC ---
-    function generateNewCode() {
-        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-        let length = Math.floor(Math.random() * 10) + 5;
-        let code = "";
-        for (let i = 0; i < length; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-        
-        state.accessCode = code;
-        state.expiry = Date.now() + (20 * 60 * 1000); // 20 mins
-        document.getElementById('current-code-display').innerText = code;
-    }
-
-    function checkTimer() {
-        let remaining = Math.max(0, state.expiry - Date.now());
-        let mins = Math.floor(remaining / 60000);
-        let secs = Math.floor((remaining % 60000) / 1000);
-        document.getElementById('timer').innerText = `${mins}m ${secs}s`;
-        if (remaining <= 0) generateNewCode();
-    }
-
-    function checkAccessCode() {
-        const input = document.getElementById('family-code-input').value.toUpperCase();
-        if (input === state.accessCode) {
-            showSection('auth-sec');
-            showStatus("Access Granted", "success");
-        } else {
-            showStatus("Invalid Family Code", "error");
-        }
-    }
-
-    // --- ACCOUNT LOGIC ---
-    function register() {
-        const user = document.getElementById('reg-user').value.trim();
-        const secret = document.getElementById('reg-secret').value;
-        const display = document.getElementById('reg-display').value || user;
-
-        if (!user || !secret) return showStatus("Fill required fields", "error");
-        if (state.users[user]) return showStatus("User exists", "error");
-
-        state.users[user] = { 
-            secret, 
-            display, 
-            status: 'active', 
-            lockedUntil: 0 
-        };
-        saveUsers();
-        login(user, secret);
-    }
-
-    function login(manualUser, manualSecret) {
-        const user = manualUser || document.getElementById('user-id').value;
-        const secret = manualSecret || document.getElementById('user-secret').value;
-        const userData = state.users[user];
-
-        if (!userData) return showStatus("User not found", "error");
-        
-        // Check Lockout
-        if (userData.lockedUntil > Date.now()) {
-            return showStatus(`Account locked. Try again later.`, "error");
-        }
-
-        if (userData.secret === secret) {
-            state.failedAttempts[user] = 0;
-            document.getElementById('dash-name').innerText = userData.display;
-            document.getElementById('stored-secret-text').innerText = userData.secret;
-            showSection('dash-sec');
-        } else {
-            // Anti-Abuse Logic
-            state.failedAttempts[user] = (state.failedAttempts[user] || 0) + 1;
-            if (state.failedAttempts[user] >= 5) {
-                state.users[user].lockedUntil = Date.now() + (12 * 60 * 60 * 1000); // 12 hours
-                saveUsers();
-                showStatus("Too many attempts. Account locked for 12 hours.", "error");
-            } else {
-                showStatus(`Incorrect secret. ${5 - state.failedAttempts[user]} attempts left.`, "error");
-            }
-        }
-    }
-
-    // --- ADMIN TOOLS ---
-    function updateAdminTable() {
-        const tbody = document.querySelector('#user-table tbody');
-        tbody.innerHTML = '';
-        Object.keys(state.users).forEach(u => {
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td>${u}</td>
-                <td>${state.users[u].secret}</td>
-                <td>${state.users[u].status}</td>
-                <td><button onclick="deleteUser('${u}')" style="padding:2px; font-size:10px; background:red">Delete</button></td>
-            `;
-        });
-    }
-
-    // --- UTILITIES ---
     function showSection(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
 
-    function showStatus(msg, type) {
-        const s = document.getElementById('status');
-        s.innerText = msg;
-        s.className = `status-msg ${type}`;
-        s.style.display = 'block';
-        setTimeout(() => s.style.display = 'none', 4000);
+    // --- LOGIC: CODE GENERATION ---
+    function generateNewCode() {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()";
+        let newCode = "";
+        do {
+            newCode = "";
+            for (let i = 0; i < 12; i++) newCode += chars.charAt(Math.floor(Math.random() * chars.length));
+        } while (system.usedCodes.includes(newCode));
+
+        system.currentCode = newCode;
+        system.expiry = Date.now() + (20 * 60 * 1000);
+        system.usedCodes.push(newCode);
+        saveSystem();
+        renderAdmin();
     }
 
-    function saveUsers() {
-        localStorage.setItem('pv_users', JSON.stringify(state.users));
-        updateAdminTable();
+    // --- LOGIC: AUTHENTICATION ---
+    function handleRegister() {
+        const u = document.getElementById('reg-user').value;
+        const s = document.getElementById('reg-secret').value;
+        if(!u || !s) return alert("Fill all fields");
+        
+        const isAdmin = Object.keys(users).length === 0; // First user is Admin
+        users[u] = { secret: s, isAdmin: isAdmin, notes: [] };
+        localStorage.setItem('pv_users', JSON.stringify(users));
+        alert(isAdmin ? "Admin account created!" : "Account created! Ask Admin for family code.");
+        showSection('login-sec');
     }
 
-    function deleteUser(u) {
-        delete state.users[u];
-        saveUsers();
+    function handleLogin() {
+        const u = document.getElementById('login-user').value;
+        const s = document.getElementById('login-secret').value;
+        
+        if (users[u] && users[u].secret === s) {
+            currentUser = u;
+            if (users[u].isAdmin) {
+                if(!system.currentCode) generateNewCode();
+                enterVault();
+            } else {
+                showSection('verify-sec');
+            }
+        } else {
+            alert("Invalid credentials.");
+        }
     }
 
+    function confirmFamilyCode() {
+        const input = document.getElementById('verify-code-input').value;
+        if (Date.now() > system.expiry) {
+            alert("Code has expired! Ask Admin for a new one.");
+            generateNewCode();
+            return;
+        }
+        if (input === system.currentCode) {
+            enterVault();
+        } else {
+            alert("Incorrect Family Code.");
+        }
+    }
+
+    // --- VAULT MANAGEMENT ---
+    function enterVault() {
+        showSection('vault-sec');
+        document.getElementById('welcome-msg').innerText = `Hello, ${currentUser}`;
+        if (users[currentUser].isAdmin) {
+            document.getElementById('admin-controls').style.display = 'block';
+            renderAdmin();
+        }
+        renderNotes();
+    }
+
+    function saveNote() {
+        const title = document.getElementById('note-title').value;
+        const content = document.getElementById('note-content').value;
+        users[currentUser].notes.push({ title, content, id: Date.now() });
+        localStorage.setItem('pv_users', JSON.stringify(users));
+        renderNotes();
+        document.getElementById('note-title').value = '';
+        document.getElementById('note-content').value = '';
+    }
+
+    function deleteNote(id) {
+        users[currentUser].notes = users[currentUser].notes.filter(n => n.id !== id);
+        localStorage.setItem('pv_users', JSON.stringify(users));
+        renderNotes();
+    }
+
+    function renderNotes() {
+        const list = document.getElementById('notes-list');
+        list.innerHTML = '<h3>Your Stored Secrets</h3>';
+        users[currentUser].notes.forEach(n => {
+            list.innerHTML += `
+                <div class="note-card">
+                    <strong>${n.title}</strong><br>${n.content}
+                    <button onclick="deleteNote(${n.id})" style="width:auto; padding:2px 10px; background:red; margin-top:10px;">Delete</button>
+                </div>`;
+        });
+    }
+
+    function renderAdmin() {
+        document.getElementById('admin-code-display').innerText = system.currentCode;
+    }
+
+    function saveSystem() { localStorage.setItem('pv_system', JSON.stringify(system)); }
     function logout() { location.reload(); }
 
-    init();
-</script>
+    // Timer Update
+    setInterval(() => {
+        if(system.expiry > 0) {
+            const rem = Math.max(0, system.expiry - Date.now());
+            const m = Math.floor(rem/60000);
+            const s = Math.floor((rem%60000)/1000);
+            document.getElementById('timer').innerText = `${m}m ${s}s`;
+            if(rem === 0 && system.currentCode !== "") {
+                system.currentCode = "[EXPIRED]";
+                saveSystem();
+            }
+        }
+    }, 1000);
 
+</script>
 </body>
 </html>
